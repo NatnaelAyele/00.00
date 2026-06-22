@@ -76,7 +76,7 @@ flowchart LR
 | API | FastAPI, Uvicorn |
 | Frontend | HTML, CSS, vanilla JavaScript |
 | Charts and maps | Chart.js, Leaflet, CARTO/OpenStreetMap tiles |
-| Testing | Python `unittest` |
+
 
 ## Prerequisites
 
