@@ -4,6 +4,12 @@ An end-to-end data engineering and analytics application for exploring New York 
 
 The application includes dataset-level KPIs, pickup-date and pickup-borough filters, revenue analysis, pickup and drop-off mobility patterns, suspicious-record inspection, downloadable reports, and a complete NYC taxi-zone revenue choropleth.
 
+## Documentation and walkthrough
+
+- [Project documentation](docs/Documentation.pdf)
+- [BSE Team 8 task sheet](<docs/BSE_Team_Task _Sheet_[EWD_Summative _Urban_Mobility_Data_Explorer_Cohort 3_Team8] - 1.pdf>)
+- [Video walkthrough](https://youtu.be/Joa_MklNCNw)
+
 ## Important: data files are not bundled
 
 The populated database and source Parquet file are intentionally not stored in the repository:
@@ -378,52 +384,52 @@ http://localhost:8000/api/analytics/summary?borough=Manhattan&pickup_date=2019-0
 
 `pickup_date` uses the ISO `YYYY-MM-DD` format.
 
-## Running tests
-
-From the repository root:
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-The reliability tests currently verify that:
-
-- literal `N/A` taxi-zone labels survive lookup loading;
-- pandas missing-value scalars are converted safely before SQLite binding; and
-- an empty analytics source fails before existing aggregate data is erased.
-
 ## Project structure
 
 ```text
 Urban-Mobility-Data-Explorer_T8/
-├── backend/
-│   ├── algorithms/        # Merge sort and top-zone selection
-│   ├── config/            # SQLite paths and connection settings
-│   ├── models/            # Domain models
-│   ├── routes/            # FastAPI endpoints
-│   ├── services/          # Query and analytics services
-│   └── app.py             # FastAPI application
-├── database/
-│   ├── schema.sql         # Tables and constraints
-│   └── indexes.sql        # Deferred/query indexes
-├── data/
-│   └── mobility.db        # Locally populated database; can exceed 2 GB
-├── etl/
-│   ├── data/raw/          # Downloaded Parquet and zone source files
-│   ├── extract/           # Parquet, lookup, and spatial readers
-│   ├── transform/         # Validation, cleaning, outliers, joins, features
-│   ├── load/              # SQLite and aggregate loaders
-│   └── utils/             # Configuration and audit helpers
-├── frontend/
-│   ├── assets/
-│   ├── components/        # Shared sidebar, navbar, and cards
-│   ├── css/               # Shared, page, and responsive styles
-│   ├── js/                # API client, router, charts, and page controllers
-│   ├── pages/             # Dashboard application pages
-│   └── index.html         # Landing page
-├── tests/
-├── requirements.txt
-└── README.md
+|-- .vscode/
+|   `-- settings.json
+|-- backend/
+|   |-- algorithms/         # Merge sort and top-zone selection
+|   |-- config/             # SQLite paths and connection settings
+|   |-- models/             # Trip, location, boundary, and quality models
+|   |-- routes/             # FastAPI route handlers
+|   |-- services/           # Trip, zone, and analytics services
+|   |-- utils/              # Backend helpers and validators
+|   `-- app.py              # FastAPI application entry point
+|-- data/
+|   `-- mobility.db         # Local SQLite database; populated size exceeds 2 GB
+|-- database/
+|   |-- indexes.sql         # Deferred and query-performance indexes
+|   |-- schema.sql          # Tables, relationships, and constraints
+|   `-- seed_data.sql       # Optional seed definitions
+|-- docs/
+|   |-- Documentation.pdf
+|   `-- BSE_Team_Task _Sheet_[EWD_Summative _Urban_Mobility_Data_Explorer_Cohort 3_Team8] - 1.pdf
+|-- etl/
+|   |-- data/
+|   |   |-- logs/
+|   |   |   `-- cleaning_summary.json
+|   |   `-- raw/
+|   |       |-- spatial_metadata/    # NYC taxi-zone shapefile components
+|   |       |-- taxi_zone_lookup.csv
+|   |       `-- yellow_tripdata_2019-01.parquet  # Downloaded locally
+|   |-- extract/             # Parquet, lookup, GeoJSON, and spatial loaders
+|   |-- load/                # Database, trip, boundary, and analytics loaders
+|   |-- transform/           # Validation, cleaning, outliers, joins, and features
+|   |-- utils/               # ETL configuration and audit logging
+|   `-- main.py              # ETL entry point
+|-- frontend/
+|   |-- assets/images/       # Application logo
+|   |-- components/          # Shared sidebar, navbar, and cards
+|   |-- css/                 # Base, dashboard, revenue, and responsive styles
+|   |-- js/                  # API client, router, charts, and page controllers
+|   |-- pages/               # Dashboard, revenue, mobility, zones, quality, reports
+|   `-- index.html           # Landing page
+|-- .gitignore
+|-- README.md
+`-- requirements.txt
 ```
 
 ## Troubleshooting
