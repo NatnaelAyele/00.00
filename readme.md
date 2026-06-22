@@ -8,7 +8,7 @@ The application includes dataset-level KPIs, pickup-date and pickup-borough filt
 
 The populated database and source Parquet file are intentionally not stored in the repository:
 
-- A fully populated `data/mobility.db` is larger than 2 GB, exceeding GitHub's file-size limits. You must build it locally by running the ETL loader.
+- A fully populated `data/mobility.db` is larger than 2 GB, exceeding GitHub's file-size limits. You must build it locally by running the ETL loader `etl/load/load_all.py`.
 - `yellow_tripdata_2019-01.parquet` is also excluded because it is a large binary source file. Download it from the official NYC TLC dataset URL below.
 
 Download:
