@@ -8,20 +8,20 @@ The application includes dataset-level KPIs, pickup-date and pickup-borough filt
 
 The populated database and source Parquet file are intentionally not stored in the repository:
 
-- A fully populated `data/mobility.db` is larger than 2 GB, exceeding GitHub's file-size limits. You must build it locally by running the ETL loader `etl/load/load_all.py`.
-- `yellow_tripdata_2019-01.parquet` is also excluded because it is a large binary source file. Download it from the official NYC TLC dataset URL below.
+- A fully populated `data/mobility.db` is larger than 2 GB, exceeding GitHub's file-size limits. A local database build is therefore required through the ETL loader in `etl/load/load_all.py`.
+- `yellow_tripdata_2019-01.parquet` is also excluded because it is a large binary source file. The official NYC TLC download is provided below.
 
 Download:
 
 [`yellow_tripdata_2019-01.parquet`](https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2019-01.parquet)
 
-Place the downloaded file at exactly:
+Expected destination:
 
 ```text
 etl/data/raw/yellow_tripdata_2019-01.parquet
 ```
 
-The repository already contains the taxi-zone lookup and spatial shapefile components required by the loader. Do not rename or separate the shapefile's `.shp`, `.dbf`, `.shx`, `.prj`, and related files.
+The repository already contains the taxi-zone lookup and spatial shapefile components required by the loader. The shapefile's `.shp`, `.dbf`, `.shx`, `.prj`, and related components must remain together with their existing names.
 
 ## What the project does
 
@@ -80,7 +80,7 @@ flowchart LR
 
 ## Prerequisites
 
-Before starting, install:
+The local environment requires:
 
 - Git
 - Python 3.11 or newer
@@ -91,7 +91,7 @@ The ETL is CPU-, disk-, and memory-intensive. Runtime depends heavily on the mac
 
 ## Quick start
 
-All Python commands should be run from the repository root unless the instructions explicitly change directories.
+The commands below assume the repository root as the working directory unless a step explicitly changes directories.
 
 ### 1. Clone the repository
 
@@ -100,7 +100,7 @@ git clone <repository-url>
 cd Urban-Mobility-Data-Explorer_T8
 ```
 
-Replace `<repository-url>` with this repository's Git URL.
+`<repository-url>` represents this repository's Git URL.
 
 ### 2. Create and activate a virtual environment
 
@@ -111,7 +111,7 @@ python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks local activation scripts, run this once in the current terminal and activate again:
+For terminals where PowerShell blocks local activation scripts, the following process-scoped policy enables activation for the current session:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
@@ -133,7 +133,7 @@ python -m pip install -r requirements.txt
 
 ### 4. Download the trip dataset
 
-Create the raw-data directory if it does not already exist, then download the file.
+The following commands create the raw-data directory when absent and download the source file.
 
 Windows PowerShell:
 
@@ -153,7 +153,7 @@ curl -L \
   -o etl/data/raw/yellow_tripdata_2019-01.parquet
 ```
 
-Confirm that the required inputs now exist:
+Expected raw-data layout:
 
 ```text
 etl/data/raw/
@@ -169,7 +169,7 @@ etl/data/raw/
 
 ### 5. Build the local database
 
-Stop the backend server if it is already running, then execute the complete loader:
+The full load should run while the backend server and external database viewers are stopped:
 
 ```bash
 python -m etl.load.load_all
@@ -192,7 +192,7 @@ The generated database is written to:
 data/mobility.db
 ```
 
-Do not interrupt the loader unless necessary. The loader commits trip batches periodically, so an interrupted run may leave a partially populated database. If that happens during trip processing, rerun the full command. If all trips loaded and only the final analytics/index stage failed, use the recovery command described below.
+The loader commits trip batches periodically. An interruption during trip processing may therefore leave a partially populated database and requires another full load. When all trips are present and only the final analytics or index stage fails, the analytics-only recovery procedure can complete the build.
 
 ### 6. Start the API
 
@@ -208,23 +208,23 @@ Useful backend URLs:
 - Interactive Swagger documentation: <http://127.0.0.1:8000/docs>
 - OpenAPI specification: <http://127.0.0.1:8000/openapi.json>
 
-The frontend is configured to request the API at `http://localhost:8000/api`. If you change the backend port or host, update `API_BASE_URL` in `frontend/js/api.js`.
+The frontend requests `http://localhost:8000/api` by default. Deployments using another backend host or port require a corresponding `API_BASE_URL` change in `frontend/js/api.js`.
 
 ### 7. Serve the frontend
 
-Open a second terminal, keep the backend running, and serve the frontend over HTTP:
+The frontend runs from a separate terminal while the backend remains available:
 
 ```bash
 cd frontend
 python -m http.server 5500
 ```
 
-Then open:
+Application URLs:
 
 - Landing page: <http://localhost:5500/>
 - Dashboard directly: <http://localhost:5500/pages/dashboard.html>
 
-Do not open the HTML files directly with a `file://` URL. The client-side router fetches page fragments, which requires an HTTP server.
+Direct `file://` access is unsupported because the client-side router fetches page fragments over HTTP.
 
 ## ETL behavior in detail
 
@@ -302,7 +302,7 @@ The application is designed so interactive pages do not repeatedly aggregate the
 
 ## Analytics-only recovery
 
-If the trips table is already complete but analytics tables or deferred indexes are missing, do not reload the Parquet file. Run:
+For a complete `trips` table with missing analytics tables or deferred indexes, the recovery command avoids another Parquet load:
 
 ```bash
 python -m etl.load.load_all --analytics-only
@@ -310,7 +310,7 @@ python -m etl.load.load_all --analytics-only
 
 This performs one streamed scan of the existing `trips` table, rebuilds all analytics aggregates, reconciles zone labels, recreates query indexes, and refreshes planner statistics.
 
-Only use this command when `data/mobility.db` already contains the complete trips dataset. It cannot reconstruct trips from an empty or partial database.
+This command requires a complete trips dataset in `data/mobility.db`; it cannot reconstruct an empty or partial `trips` table.
 
 ## Database design
 
@@ -376,7 +376,7 @@ Example:
 http://localhost:8000/api/analytics/summary?borough=Manhattan&pickup_date=2019-01-15
 ```
 
-`pickup_date` must use the ISO `YYYY-MM-DD` format.
+`pickup_date` uses the ISO `YYYY-MM-DD` format.
 
 ## Running tests
 
@@ -430,17 +430,17 @@ Urban-Mobility-Data-Explorer_T8/
 
 ### `FileNotFoundError` for the Parquet file
 
-Confirm the filename and path are exact:
+Required filename and path:
 
 ```text
 etl/data/raw/yellow_tripdata_2019-01.parquet
 ```
 
-A browser may append `(1)` or another suffix when downloading the same file more than once. Rename it if necessary.
+Repeated browser downloads may append `(1)` or another suffix. Such suffixes must be removed before loading.
 
 ### The dashboard loads but displays API errors
 
-Check that:
+Required runtime state:
 
 1. the database loader completed successfully;
 2. `data/mobility.db` exists and is populated;
@@ -450,17 +450,17 @@ Check that:
 
 ### `database is locked`
 
-Stop the API and any database viewer before running the full ETL. SQLite permits multiple readers but only one writer. Restart the backend after loading finishes.
+The full ETL requires the API and external database viewers to be stopped. SQLite permits multiple readers but only one writer. The backend can restart after loading finishes.
 
 ### Analytics are empty after a late ETL failure
 
-If all trips were loaded, run:
+For a complete trips table, run:
 
 ```bash
 python -m etl.load.load_all --analytics-only
 ```
 
-If trips are incomplete, rerun the full loader instead.
+An incomplete trips table requires the full loader instead.
 
 ### Zone map is blank
 
@@ -470,7 +470,7 @@ The map requires:
 - internet access for Leaflet/CARTO tiles and CDN assets; and
 - a running API at `localhost:8000`.
 
-Inspect the browser developer console and test `/api/zones` through Swagger.
+Additional diagnostics are available in the browser developer console and through the `/api/zones` Swagger request.
 
 
 
@@ -482,8 +482,8 @@ The source data may contain quality issues, corrections, unusual values, or fiel
 
 ## Development notes
 
-- Run Python modules from the repository root so package imports and configured paths resolve consistently.
-- Stop and restart Uvicorn after replacing the database. API connections are intentionally opened in immutable read-only mode for fast serving.
-- Keep schema changes synchronized with loader insert columns and API queries.
-- Add or update tests for ETL type conversions and database-writing edge cases.
-- Do not commit virtual environments, Python bytecode, SQLite WAL/SHM files, downloaded Parquet files, or a populated multi-gigabyte database.
+- Python modules use the repository root for consistent package imports and configured paths.
+- Uvicorn requires a restart after database replacement because API connections use immutable read-only mode for fast serving.
+- Schema changes must remain synchronized with loader insert columns and API queries.
+- ETL type conversions and database-writing edge cases should include corresponding test coverage.
+- Virtual environments, Python bytecode, SQLite WAL/SHM files, downloaded Parquet files, and populated multi-gigabyte databases are local artifacts rather than repository content.
