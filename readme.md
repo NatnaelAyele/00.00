@@ -472,9 +472,7 @@ The map requires:
 
 Inspect the browser developer console and test `/api/zones` through Swagger.
 
-### A populated database appears in Git changes
 
-The generated database is a local runtime artifact and should not be committed with trip records. Likewise, never commit the downloaded Parquet source. Large binaries do not belong in normal Git history and may be rejected by the remote even if a later commit deletes them.
 
 ## Data source and scope
 
